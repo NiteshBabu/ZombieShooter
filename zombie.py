@@ -9,7 +9,7 @@ zombieCount = 10
 
 win = pygame.display.set_mode(screen_size)
 pygame.display.set_caption("Zombie Mania")
-scoreFont = pygame.font.SysFont('Comic Sans MS',30,False, True)
+scoreFont = pygame.font.SysFont('Comic Sans MS', 30, False, True)
 
 # setting up the sounds
 bulletSound = pygame.mixer.Sound('NFF-laser-02.wav')
@@ -69,7 +69,7 @@ class Player:
 		
 		# show scores
 		score_textsurface = scoreFont.render('Score : ' + str(self.score), False,(0,0,0))
-		win.blit(score_textsurface,(830,10))
+		win.blit(score_textsurface,(810,10))
 
 		if not(self.isDead):
 			# Health Bar
@@ -104,6 +104,7 @@ class Player:
 					win.blit(self.character, (self.x,self.y))
 		else:
 			pygame.draw.rect(win,(255,0,0),(self.x+40,self.y,self.width-65,10))
+			win.blit(scoreFont.render('YOU DIED', False, (0,0,0)), (450, 200))
 			if self.deadCount >= 15:
 				win.blit(self.died[14], (self.x, self.y))
 			else:
@@ -115,7 +116,8 @@ class Player:
 
 	def hit(self):
 		if self.health < 2:
-			self.score-= 5
+			if self.score >= 5:
+				self.score-= 5
 			self.health+= 1
 			font = pygame.font.SysFont('Comic Sans MS', 100, True, False)
 			text = font.render('-5',False,(0,0,0))
@@ -151,10 +153,10 @@ class Projectiles:
 			pygame.draw.circle(win, self.color, (self.x-10, self.y), self.radius)
 			
 class Enemy:
+	#  sprites lists
 	died = []
 	walk = []
-
-	def __init__(self, x, y, width, height, enemy_constraints):
+	def __init__(self, x=800, y=400, width=100, height=100, enemy_constraints=(0,100)):
 		self.x = x
 		self.y = y
 		self.width = width
@@ -166,6 +168,7 @@ class Enemy:
 		self.hitbox = (self.x, self.y, self.width + 5, self.height + 5)
 		self.health = 100
 		self.isDead = False
+		self.round = 1
 
 		for i in range(1,11):
 			self.walk.append(pygame.transform.scale(pygame.image.load(f'Zombiefiles/Walk ({i}).png'), (width,height)))
@@ -188,15 +191,26 @@ class Enemy:
 			self.hitbox = (self.x+13, self.y, self.width-25, self.height)
 		else:
 			self.hitbox = (0,0,0,0)
+			win.blit(scoreFont.render(f'Round {self.round}', False, (0,0,0)),(450,200))
 			if self.diedCount < 10:
 				win.blit(self.died[self.diedCount//1], (self.x, self.y))
 				self.diedCount += 1
 			else:
 				win.blit(self.died[9], (self.x, self.y))
+				self.respawn()
 
 
 		# pygame.draw.rect(win, (250,0,0), self.hitbox,3)
 
+	def respawn(self):
+		import time
+		time.sleep(2)
+		self.x = 800
+		self.y = 400
+		self.isDead = False
+		self.diedCount = 0
+		self.health = 100
+		self.speed -= 2
 
 	def move(self):
 		if not(self.isDead):
@@ -213,7 +227,7 @@ class Enemy:
 			hero.score+=10
 		else:
 			self.isDead = True
-
+			self.round += 1
 
 
 def redraw_window():
